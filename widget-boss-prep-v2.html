@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boss Battle Prep</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { height: 100%; background: #191919; }
+  body { height: 100%; margin: 0; padding: 0; background: #191919; font-family: 'JetBrains Mono', monospace; }
+
+  .page-wrap {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    overflow-y: scroll; overflow-x: hidden;
+    padding: 10px; display: flex; flex-direction: column; gap: 10px;
+    background: #191919;
+  }
+  .page-wrap::-webkit-scrollbar { width: 8px; }
+  .page-wrap::-webkit-scrollbar-track { background: #2a2a2a; border-radius: 4px; }
+  .page-wrap::-webkit-scrollbar-thumb { background: #FF4FA3; border-radius: 4px; min-height: 60px; }
+  .page-wrap::-webkit-scrollbar-thumb:hover { background: #d4006e; }
+  .page-wrap:focus { outline: none; }
+
+  /* CERT SECTION */
+  .cert-section { display: flex; flex-direction: column; gap: 0; }
+
+  /* CERT HEADER BAR */
+  .cert-header {
+    border-radius: 10px;
+    padding: 10px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer; user-select: none;
+    transition: opacity 0.15s;
+  }
+  .cert-header:hover { opacity: 0.9; }
+  .cert-header.open { border-radius: 10px 10px 0 0; }
+  .cert-header-left { display: flex; flex-direction: column; gap: 3px; }
+  .cert-header-title { font-size: 11px; font-weight: 800; color: #fff; letter-spacing: 0.06em; }
+  .cert-header-sub { font-size: 9px; font-weight: 700; opacity: 0.7; letter-spacing: 0.1em; }
+  .cert-header-right { display: flex; align-items: center; gap: 10px; }
+  .cert-overall-pct { font-size: 16px; font-weight: 800; color: #fff; }
+  .cert-boss-badge { font-size: 8px; font-weight: 800; background: rgba(0,0,0,0.25); color: #fff; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.08em; }
+  .cert-arrow { font-size: 10px; color: rgba(255,255,255,0.6); transition: transform 0.2s; }
+  .cert-arrow.open { transform: rotate(180deg); }
+
+  /* CERT BODY */
+  .cert-body {
+    display: none;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    padding: 12px;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .cert-body.open { display: flex; }
+
+  /* OVERALL BAR */
+  .overall-row { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #111; border-radius: 8px; }
+  .overall-label { font-size: 9px; color: #666; font-weight: 700; letter-spacing: 0.1em; white-space: nowrap; }
+  .overall-track { flex: 1; height: 6px; background: #2a2a2a; border-radius: 20px; overflow: hidden; }
+  .overall-fill { height: 100%; border-radius: 20px; transition: width 0.5s ease; }
+  .overall-pct { font-size: 11px; font-weight: 800; min-width: 32px; text-align: right; }
+  .overall-status { font-size: 9px; font-weight: 700; white-space: nowrap; }
+
+  /* DOMAIN GRID */
+  .domain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  .domain-card { background: #111; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px 14px; transition: border-color 0.2s; }
+  .domain-card.cleared { box-shadow: 0 0 10px -2px var(--clr); }
+
+  .dom-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+  .dom-name { font-size: 12px; font-weight: 800; color: #fff; flex: 1; padding-right: 8px; }
+  .dom-pct-val { font-size: 13px; font-weight: 800; }
+
+  .dom-sub { font-size: 9px; color: #555; font-weight: 600; margin-bottom: 8px; }
+  .dom-bar-track { height: 4px; background: #2a2a2a; border-radius: 20px; overflow: hidden; margin-bottom: 8px; }
+  .dom-bar-fill { height: 100%; border-radius: 20px; transition: width 0.3s; }
+
+  .dom-slider { width: 100%; -webkit-appearance: none; height: 4px; background: #2a2a2a; border-radius: 2px; outline: none; cursor: pointer; margin-bottom: 6px; display: block; }
+  .dom-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; cursor: pointer; border: 2px solid #191919; }
+
+  .dom-status-row { display: flex; justify-content: space-between; align-items: center; }
+  .dom-status-tag { font-size: 8px; font-weight: 800; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.06em; }
+  .dom-tree-pct { font-size: 9px; font-weight: 700; }
+
+  /* SNAP ROW */
+  .snap-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  .snap-card { background: #111; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px 8px; text-align: center; }
+  .snap-n { font-size: 18px; font-weight: 800; line-height: 1; }
+  .snap-l { font-size: 8px; color: #555; font-weight: 700; margin-top: 3px; letter-spacing: 0.08em; text-transform: uppercase; }
+</style>
+</head>
+<body>
+<div class="page-wrap" id="page-wrap" tabindex="0">
+  <div id="sections"></div>
+</div>
+
+<script>
+const CERTS = [
+  {
+    id: 'sec', name: 'CompTIA Security+', boss: 'BOSS 01', color: '#FF4FA3',
+    passScore: 750, examMins: 90,
+    domains: [
+      { name: 'General Security Concepts',              weight: 12, key: 0 },
+      { name: 'Threats, Vulnerabilities & Mitigations', weight: 22, key: 1 },
+      { name: 'Security Architecture',                  weight: 18, key: 2 },
+      { name: 'Security Operations',                    weight: 28, key: 3 },
+      { name: 'Security Program Mgmt & Oversight',      weight: 20, key: 4 },
+    ]
+  },
+  {
+    id: 'sc300', name: 'SC-300', boss: 'BOSS 02', color: '#D4BBFF',
+    passScore: 700, examMins: 120,
+    domains: [
+      { name: 'Implement & Manage User Identities',    weight: 23, key: 0 },
+      { name: 'Authentication & Access Management',    weight: 28, key: 1 },
+      { name: 'Plan & Implement Workload Identities',  weight: 23, key: 2 },
+      { name: 'Plan & Automate Identity Governance',   weight: 23, key: 3 },
+    ]
+  },
+  {
+    id: 'okta-pro', name: 'Okta Certified Professional', boss: 'BOSS 03', color: '#66FFD4',
+    passScore: 70, examMins: 90,
+    domains: [
+      { name: 'Identity & Access Management', weight: 27, key: 0 },
+      { name: 'User Lifecycle Management',    weight: 33, key: 1 },
+      { name: 'Security',                     weight: 20, key: 2 },
+      { name: 'Administration & Troubleshooting', weight: 20, key: 3 },
+    ]
+  },
+  {
+    id: 'okta-gov', name: 'Okta Identity Governance', boss: 'BOSS 04', color: '#FFE234',
+    passScore: 70, examMins: 90,
+    domains: [
+      { name: 'Access Requests',               weight: 20, key: 0 },
+      { name: 'Access Certification',          weight: 20, key: 1 },
+      { name: 'Entitlement Management',        weight: 20, key: 2 },
+      { name: 'Governance Reporting',          weight: 20, key: 3 },
+      { name: 'Workflows & Automation',        weight: 20, key: 4 },
+    ]
+  },
+  {
+    id: 'crisc', name: 'CRISC', boss: 'BOSS 05', color: '#FF8080',
+    passScore: 450, examMins: 240,
+    domains: [
+      { name: 'IT Risk Identification',            weight: 20, key: 0 },
+      { name: 'IT Risk Assessment',               weight: 20, key: 1 },
+      { name: 'Risk Response & Mitigation',       weight: 20, key: 2 },
+      { name: 'Risk & Control Monitoring',        weight: 20, key: 3 },
+      { name: 'IS Control Design & Implementation', weight: 20, key: 4 },
+    ]
+  },
+];
+
+// Read skill tree domain checkboxes (shared localStorage from same GitHub domain)
+function getTreeDomains(certId) {
+  return JSON.parse(localStorage.getItem('st_dom_' + certId) || '{}');
+}
+
+// Boss prep slider values
+function getSlider(certId, domIdx) { return parseInt(localStorage.getItem('bp_' + certId + '_' + domIdx) || '0'); }
+function setSlider(certId, domIdx, val) { localStorage.setItem('bp_' + certId + '_' + domIdx, val); }
+
+function getStatus(pct) {
+  if (pct >= 80) return { label: 'strong ✦',    color: '#66FFD4', bg: '#0a1e18' };
+  if (pct >= 60) return { label: 'getting there', color: '#FFE234', bg: '#1e1408' };
+  if (pct >= 30) return { label: 'in progress',  color: '#FFB347', bg: '#1e1008' };
+  return { label: 'needs work',  color: '#FF8080', bg: '#1e0808' };
+}
+
+function calcOverall(cert) {
+  let weighted = 0;
+  cert.domains.forEach((d, i) => {
+    const slider = getSlider(cert.id, i);
+    weighted += (slider / 100) * d.weight;
+  });
+  return Math.round(weighted);
+}
+
+function renderAll() {
+  const container = document.getElementById('sections');
+  const openIds = Array.from(container.querySelectorAll('.cert-body.open')).map(el => el.dataset.id);
+  container.innerHTML = '';
+
+  CERTS.forEach(cert => {
+    const overall = calcOverall(cert);
+    const treeDoms = getTreeDomains(cert.id);
+    const treeCleared = cert.domains.filter((_, i) => treeDoms[i]).length;
+    const isOpen = openIds.includes(cert.id);
+
+    const readyStatus = overall >= 80 ? '✦ ready to book!' : overall >= 60 ? 'almost there' : cert.domains.filter((_,i) => getSlider(cert.id,i) < 70).length + ' domains need work';
+
+    const section = document.createElement('div');
+    section.className = 'cert-section';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'cert-header' + (isOpen ? ' open' : '');
+    header.style.background = cert.color;
+    header.innerHTML = `
+      <div class="cert-header-left">
+        <div class="cert-header-title">${cert.name}</div>
+        <div class="cert-header-sub">${cert.boss} · ${treeCleared}/${cert.domains.length} domains cleared in skill tree</div>
+      </div>
+      <div class="cert-header-right">
+        <div class="cert-overall-pct">${overall}%</div>
+        <div class="cert-boss-badge">${cert.boss}</div>
+        <div class="cert-arrow${isOpen ? ' open' : ''}">▼</div>
+      </div>`;
+    header.onclick = () => {
+      header.classList.toggle('open');
+      body.classList.toggle('open');
+      header.querySelector('.cert-arrow').classList.toggle('open');
+    };
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'cert-body' + (isOpen ? ' open' : '');
+    body.dataset.id = cert.id;
+
+    // Overall bar
+    const gradColor = overall >= 80 ? '#66FFD4' : overall >= 60 ? '#FFE234' : cert.color;
+    const overallRow = `
+      <div class="overall-row">
+        <div class="overall-label">overall readiness</div>
+        <div class="overall-track"><div class="overall-fill" style="width:${overall}%;background:${gradColor};box-shadow:0 0 8px ${gradColor}60;"></div></div>
+        <div class="overall-pct" style="color:${gradColor};">${overall}%</div>
+        <div class="overall-status" style="color:${gradColor};">${readyStatus}</div>
+      </div>`;
+
+    // Domain grid
+    const domCards = cert.domains.map((d, i) => {
+      const slider = getSlider(cert.id, i);
+      const treeChecked = !!treeDoms[i];
+      // If cleared in skill tree = 100%, otherwise use slider
+      const effectivePct = treeChecked ? 100 : slider;
+      const s = getStatus(effectivePct);
+      const treePct = treeChecked ? '✦ cleared in tree' : '';
+
+      return `<div class="domain-card${effectivePct >= 70 ? ' cleared' : ''}" style="--clr:${cert.color};border-color:${effectivePct >= 70 ? cert.color : '#2a2a2a'};">
+        <div class="dom-top">
+          <div class="dom-name">${d.name}</div>
+          <div class="dom-pct-val" style="color:${cert.color};">${effectivePct}%</div>
+        </div>
+        <div class="dom-sub">${d.weight}% of exam${treeChecked ? ' · ✦ skill tree cleared' : ''}</div>
+        <div class="dom-bar-track">
+          <div class="dom-bar-fill" id="fill-${cert.id}-${i}" style="width:${effectivePct}%;background:${cert.color};box-shadow:0 0 6px ${cert.color}50;"></div>
+        </div>
+        <input type="range" class="dom-slider" min="0" max="100" value="${slider}"
+          style="accent-color:${cert.color};"
+          oninput="updateSlider('${cert.id}',${i},this.value,'${cert.color}')">
+        <div class="dom-status-row">
+          <div class="dom-status-tag" style="background:${s.bg};color:${s.color};">${s.label}</div>
+          ${treeChecked ? `<div class="dom-tree-pct" style="color:${cert.color};">✦ cleared</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+    // Weak count
+    const weakCount = cert.domains.filter((_, i) => {
+      const s = getSlider(cert.id, i);
+      const t = !!treeDoms[i];
+      return !(t || s >= 70);
+    }).length;
+
+    const snapRow = `
+      <div class="snap-row">
+        <div class="snap-card">
+          <div class="snap-n" style="color:${cert.color};">${overall}%</div>
+          <div class="snap-l">avg</div>
+        </div>
+        <div class="snap-card">
+          <div class="snap-n" style="color:#FFE234;">${weakCount}</div>
+          <div class="snap-l">weak zones</div>
+        </div>
+        <div class="snap-card">
+          <div class="snap-n" style="color:#66FFD4;">${cert.passScore}</div>
+          <div class="snap-l">pass score</div>
+        </div>
+      </div>`;
+
+    body.innerHTML = overallRow + `<div class="domain-grid">${domCards}</div>` + snapRow;
+    section.appendChild(header);
+    section.appendChild(body);
+    container.appendChild(section);
+  });
+}
+
+function updateSlider(certId, domIdx, val, color) {
+  setSlider(certId, domIdx, parseInt(val));
+  const fill = document.getElementById('fill-' + certId + '-' + domIdx);
+  if (fill) { fill.style.width = val + '%'; }
+  renderAll();
+}
+
+// Re-render when skill tree updates localStorage
+window.addEventListener('storage', e => {
+  if (e.key && e.key.startsWith('st_dom_')) renderAll();
+});
+
+document.getElementById('page-wrap').focus();
+document.getElementById('page-wrap').addEventListener('click', function() { this.focus(); });
+renderAll();
+</script>
+</body>
+</html>
